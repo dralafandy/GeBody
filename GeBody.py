@@ -149,21 +149,19 @@ def calculate_body_water_percentage(weight, body_fat_percentage, sex):
 
 # Calculate Bone Mineral Content
 def calculate_bone_mineral_content(weight):
-    return weight * 0.03
-
-# Calculate Fat-Free Mass Index (FFMI)
+    return weight * # Calculate Fat-Free Mass Index (FFMI) using the corrected height
 def calculate_ffmi(weight, height, body_fat_percentage):
     # Calculate lean body mass
     lean_body_mass = calculate_lean_body_mass(weight, body_fat_percentage)
     
     # Calculate FFMI using the lean body mass and height
-    ffmi = lean_body_mass / ((height * 100) ** 2) + 6.1 * (1.8 - height)
+    ffmi = lean_body_mass / ((height) ** 2) + 6.1 * (1.8 - height)
     
     return ffmi
 
-# Calculate Body Adiposity Index (BAI)
+# Calculate Body Adiposity Index (BAI) using the corrected height
 def calculate_bai(waist_hip_ratio, height, sex):
-    return ((waist_hip_ratio * height * 100) - 18)
+    return ((waist_hip_ratio * height) - 18)
 
 # Calculate Resting Metabolic Rate (RMR)
 def calculate_rmr(weight, height, age, sex):
