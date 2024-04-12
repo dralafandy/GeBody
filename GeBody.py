@@ -145,3 +145,137 @@ def calculate_body_water_percentage(weight, body_fat_percentage, sex):
         lean_body_mass = weight * (1 - body_fat_percentage / 100)
         body_water_percentage = 50 + 0.1 * (lean_body_mass - 45)
     return body_water_percentage
+    
+    # Calculate Bone Mineral Content
+def calculate_bone_mineral_content(weight):
+    return weight * 0.1
+
+# Calculate Fat-Free Mass Index (FFMI) using the corrected height
+def calculate_ffmi(weight, height, body_fat_percentage):
+    # Calculate lean body mass
+    lean_body_mass = calculate_lean_body_mass(weight, body_fat_percentage)
+    
+    # Calculate FFMI using the lean body mass and height
+    ffmi = lean_body_mass / ((height) ** 2) + 6.1 * (1.8 - height)
+    
+    return ffmi
+
+# Calculate Body Adiposity Index (BAI) using the corrected height
+def calculate_bai(waist_hip_ratio, height, sex):
+    return ((waist_hip_ratio * height) - 18)
+
+# Calculate Resting Metabolic Rate (RMR)
+def calculate_rmr(weight, height, age, sex):
+    if sex == 'Male':
+        rmr = 9.99 * weight + 6.25 * height * 100 - 4.92 * age + 5
+    else:
+        rmr = 9.99 * weight + 6.25 * height * 100 - 4.92 * age - 161
+    return rmr
+
+def calculate_ideal_weight(height, sex):
+    ideal_weight_male = 22 * (height ** 2)
+    ideal_weight_female = 21 * (height ** 2)
+    return ideal_weight_male if sex == 'Male' else ideal_weight_female
+
+
+def calculate_weight_difference(weight, ideal_weight):
+    difference = weight - ideal_weight
+    if difference < -0.5:
+        return "Gain weight", abs(difference)
+    elif difference > 0.5:
+        return "Lose weight", abs(difference)
+    else:
+        return "Maintain weight", abs(difference)
+
+def main():
+    st.title('GeBody - Body Composition Analyzer')
+
+    name = st.text_input('Enter patient name:')
+    age = st.number_input('Enter age:', min_value=0, max_value=150, value=30)
+    sex = st.radio('Select sex:', ('Male', 'Female'))
+    weight = st.number_input('Enter weight (kg):', min_value=0.0, value=70.0)
+    height = st.number_input('Enter height (in meters):', min_value=0.1, max_value=3.0, step=0.01, value=1.7)
+    waist_hip_ratio = st.number_input('Enter waist/hip ratio:', min_value=0.0, value=0.9)
+    body_fat_percentage = st.number_input('Enter body fat percentage:', min_value=0.0, max_value=100.0, value=20.0)
+
+    if st.button('Calculate'):
+        # Perform calculations
+        bmi = calculate_bmi(weight, height)
+        bmr = calculate_bmr(weight, height, age, sex)
+        lean_body_mass = calculate_lean_body_mass(weight, body_fat_percentage)
+        body_fat_mass = calculate_body_fat_mass(weight, body_fat_percentage)
+        waist_to_hip_ratio = calculate_waist_to_hip_ratio(waist_hip_ratio)
+        muscle_mass = calculate_muscle_mass(weight, body_fat_percentage)
+        visceral_fat_level = calculate_visceral_fat_level(waist_hip_ratio, sex)
+        body_water_percentage = calculate_body_water_percentage(weight, body_fat_percentage, sex)
+        bone_mineral_content = calculate_bone_mineral_content(weight)
+        ffmi = calculate_ffmi(weight, height, body_fat_percentage)
+        bai = calculate_bai(waist_hip_ratio, height, sex)
+        rmr = calculate_rmr(weight, height, age, sex)
+        ideal_weight = calculate_ideal_weight(height, sex)
+        weight_status, weight_difference = calculate_weight_difference(weight, ideal_weight)
+        insert_patient_data(name, age, sex, weight, height, waist_hip_ratio, body_fat_percentage)
+        st.success('Patient data saved successfully!')
+
+        # Grouping results into categories
+        body_composition_results = {
+            'BMI': bmi,
+            'BMR': bmr,
+            'Lean Body Mass': lean_body_mass,
+            'Body Fat Mass': body_fat_mass,
+            'Waist-to-Hip Ratio': waist_to_hip_ratio,
+            'Muscle Mass': muscle_mass,
+            'Visceral Fat Level': visceral_fat_level,
+            'Body Water Percentage': body_water_percentage,
+            'Bone Mineral Content': bone_mineral_content,
+            'Fat-Free Mass Index (FFMI)': ffmi,
+            'Body Adiposity Index (BAI)': bai,
+            'Resting Metabolic Rate (RMR)': rmr,
+            'Ideal Weight': ideal_weight, 
+            'Weight Status': weight_status,
+            'Weight Difference': weight_difference
+        }
+
+        # Displaying results in separate collapsible sections with improved formatting
+        st.write('## Results')
+
+        with st.expander("Body Composition", expanded=True):
+            for result, value in body_composition_results.items():
+                normal_range = normal_ranges.get(result)
+                if normal_range is not None:
+                    # Calculate status based on predefined thresholds
+                    status = ""
+                    if result in findings:
+                        for ind, description in findings[result].items():
+                            if normal_range[0] <= value <= normal_range[1]:
+                                status = ind
+                                break
+
+                    progress_value = max(0, min(1, (value - normal_range[0]) / (normal_range[1] - normal_range[0])))
+                    color = 'green' if status == 'Normal' else 'red'
+                    st.markdown(f'### {result}')
+                    st.markdown(f'Result: {value} (Normal Range: {normal_range[0]} - {normal_range[1]})')
+                    st.markdown(f"Status: {status}")
+                    st.markdown(f"Finding: {findings[result].get(status, 'No finding available')}")
+                    st.markdown(f'<progress value="{value}" max="{normal_range[1]}" style="width: 100%; background-color: {color};"></progress>', unsafe_allow_html=True)
+
+        with st.expander("Weight Status", expanded=True):
+            st.markdown('---')
+            st.markdown(f"Current Weight: {weight} kg")
+            st.markdown(f"Ideal Weight: {ideal_weight} kg")
+            st.markdown(f"Status: {weight_status}")
+            st.markdown(f"Difference: {weight_difference} kg")
+
+    if st.button('Show Data'):
+        data = fetch_patient_data(name)
+        if data:
+            st.write('## Patient Data')
+            headers = ["ID", "Name", "Age", "Sex", "Weight",
+                       "Height", "Waist-to-Hip Ratio", "Body Fat Percentage"]
+            data_df = pd.DataFrame(data, columns=headers)
+            st.dataframe(data_df)
+        else:
+            st.warning('No data found for this patient.')
+
+if __name__ == '__main__':
+    main()
