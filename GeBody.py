@@ -28,13 +28,13 @@ normal_ranges = {
     'BMR': (1500, 2500),  
     'Lean Body Mass': (50, 90),  
     'Body Fat Mass': (10, 30),  
-    'Waist-to-Hip Ratio': (0.85, 0.9),  
+    'Waist-to-Hip Ratio': (0.8, 0.85),  # Updated to commonly accepted range
     'Muscle Mass': (40, 60),  
-    'Visceral Fat Level': (5, 15),  
+    'Visceral Fat Level': (1, 12),  # Updated to commonly accepted range
     'Body Water Percentage': (45, 60),  
     'Bone Mineral Content': (1.5, 3.5),  
     'Fat-Free Mass Index (FFMI)': (17, 23),  
-    'Body Adiposity Index (BAI)': (18, 30),  
+    'Body Adiposity Index (BAI)': (8, 21),  # Updated to commonly accepted range
     'Resting Metabolic Rate (RMR)': (1500, 2500)  
 }
 
