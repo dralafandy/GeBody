@@ -193,7 +193,16 @@ def main():
     age = st.number_input('Enter age:', min_value=0, max_value=150, value=30)
     sex = st.radio('Select sex:', ('Male', 'Female'))
     weight = st.number_input('Enter weight (kg):', min_value=0.0, value=70.0)
-    height = st.number_input('Enter height (m):', min_value=0.0, value=1.7)
+    height = st.number_input('Enter height (in meters):', min_value=0.1, max_value=3.0, step=0.01, value=1.7)
+
+# Adding a brief explanation for users about the expected input format
+    st.write("Please enter your height in meters (e.g., 1.7)")
+
+# Adding validation messages for minimum and maximum height values
+    if height < 0.1:
+    st.warning("Height should be greater than 0.1 meters.")
+    elif height > 3.0:
+    st.warning("Height should be less than 3 meters.")
     waist_hip_ratio = st.number_input('Enter waist/hip ratio:', min_value=0.0, value=0.9)
     body_fat_percentage = st.number_input('Enter body fat percentage:', min_value=0.0, max_value=100.0, value=20.0)
 
