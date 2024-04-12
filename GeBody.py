@@ -21,6 +21,7 @@ def fetch_patient_data(name):
     conn.close()
     return data
 
+
 # Define normal ranges for each parameter
 normal_ranges = {
     'BMI': (18.5, 24.9),
@@ -33,7 +34,6 @@ normal_ranges = {
     'Body Water Percentage': (45, 60),  
     'Bone Mineral Content': (1.5, 3.5),  
     'Fat-Free Mass Index (FFMI)': (17, 23),  
-    'Body Adiposity Index (BAI)': (8, 21),  # Updated to commonly accepted range
     'Resting Metabolic Rate (RMR)': (1500, 2500)  
 }
 
@@ -89,9 +89,6 @@ findings = {
         'Normal': 'Your FFMI falls within the normal range.',
         'High': 'Your FFMI is higher than normal.'
     },
-    'Body Adiposity Index (BAI)': {
-        'Normal': 'Your BAI falls within the normal range.'
-    },
     'Resting Metabolic Rate (RMR)': {
         'Low': 'Your RMR is lower than normal.',
         'Normal': 'Your RMR falls within the normal range.',
@@ -120,8 +117,8 @@ def calculate_body_fat_mass(weight, body_fat_percentage):
     return weight * (body_fat_percentage / 100)
 
 # Calculate Waist-to-Hip Ratio
-def calculate_waist_to_hip_ratio(waist_hip_ratio):
-    return waist_hip_ratio
+def calculate_waist_to_hip_ratio(waist_circumference, hip_circumference):
+    return waist_circumference / hip_circumference
 
 # Calculate Muscle Mass
 def calculate_muscle_mass(weight, body_fat_percentage):
@@ -145,10 +142,10 @@ def calculate_body_water_percentage(weight, body_fat_percentage, sex):
         lean_body_mass = weight * (1 - body_fat_percentage / 100)
         body_water_percentage = 50 + 0.1 * (lean_body_mass - 45)
     return body_water_percentage
-    
-    # Calculate Bone Mineral Content
+
+# Calculate Bone Mineral Content
 def calculate_bone_mineral_content(weight):
-    return weight * 0.1
+    return weight * 0.03
 
 # Calculate Fat-Free Mass Index (FFMI) using the corrected height
 def calculate_ffmi(weight, height, body_fat_percentage):
@@ -159,10 +156,6 @@ def calculate_ffmi(weight, height, body_fat_percentage):
     ffmi = lean_body_mass / ((height) ** 2) + 6.1 * (1.8 - height)
     
     return ffmi
-
-# Calculate Body Adiposity Index (BAI) using the corrected height
-def calculate_bai(waist_hip_ratio, height, sex):
-    return ((waist_hip_ratio * height) - 18)
 
 # Calculate Resting Metabolic Rate (RMR)
 def calculate_rmr(weight, height, age, sex):
@@ -194,7 +187,7 @@ def main():
     age = st.number_input('Enter age:', min_value=0, max_value=150, value=30)
     sex = st.radio('Select sex:', ('Male', 'Female'))
     weight = st.number_input('Enter weight (kg):', min_value=0.0, value=70.0)
-    height = st.number_input('Enter height (in meters):', min_value=0.1, max_value=3.0, step=0.01, value=1.7)
+    height = st.number_input('Enter height (m):', min_value=0.0, value=1.7)
     waist_hip_ratio = st.number_input('Enter waist/hip ratio:', min_value=0.0, value=0.9)
     body_fat_percentage = st.number_input('Enter body fat percentage:', min_value=0.0, max_value=100.0, value=20.0)
 
@@ -204,13 +197,11 @@ def main():
         bmr = calculate_bmr(weight, height, age, sex)
         lean_body_mass = calculate_lean_body_mass(weight, body_fat_percentage)
         body_fat_mass = calculate_body_fat_mass(weight, body_fat_percentage)
-        waist_to_hip_ratio = calculate_waist_to_hip_ratio(waist_hip_ratio)
         muscle_mass = calculate_muscle_mass(weight, body_fat_percentage)
         visceral_fat_level = calculate_visceral_fat_level(waist_hip_ratio, sex)
         body_water_percentage = calculate_body_water_percentage(weight, body_fat_percentage, sex)
         bone_mineral_content = calculate_bone_mineral_content(weight)
         ffmi = calculate_ffmi(weight, height, body_fat_percentage)
-        bai = calculate_bai(waist_hip_ratio, height, sex)
         rmr = calculate_rmr(weight, height, age, sex)
         ideal_weight = calculate_ideal_weight(height, sex)
         weight_status, weight_difference = calculate_weight_difference(weight, ideal_weight)
@@ -223,13 +214,12 @@ def main():
             'BMR': bmr,
             'Lean Body Mass': lean_body_mass,
             'Body Fat Mass': body_fat_mass,
-            'Waist-to-Hip Ratio': waist_to_hip_ratio,
+            'Waist-to-Hip Ratio': waist_hip_ratio,
             'Muscle Mass': muscle_mass,
             'Visceral Fat Level': visceral_fat_level,
             'Body Water Percentage': body_water_percentage,
             'Bone Mineral Content': bone_mineral_content,
             'Fat-Free Mass Index (FFMI)': ffmi,
-            'Body Adiposity Index (BAI)': bai,
             'Resting Metabolic Rate (RMR)': rmr,
             'Ideal Weight': ideal_weight, 
             'Weight Status': weight_status,
@@ -241,6 +231,15 @@ def main():
 
         with st.expander("Body Composition", expanded=True):
             for result, value in body_composition_results.items():
+                unit = ""
+                if result in ["BMI", "Lean Body Mass", "Body Fat Mass", "Muscle Mass", "Bone Mineral Content", "Fat-Free Mass Index (FFMI)", "Ideal Weight", "Weight Difference"]:
+                    unit = "kg"
+                elif result in ["BMR", "RMR"]:
+                    unit = "kcal/day"
+                elif result == "Body Water Percentage":
+                    unit = "%"
+                elif result == "Waist-to-Hip Ratio":
+                    unit = ""
                 normal_range = normal_ranges.get(result)
                 if normal_range is not None:
                     # Calculate status based on predefined thresholds
@@ -254,10 +253,11 @@ def main():
                     progress_value = max(0, min(1, (value - normal_range[0]) / (normal_range[1] - normal_range[0])))
                     color = 'green' if status == 'Normal' else 'red'
                     st.markdown(f'### {result}')
-                    st.markdown(f'Result: {value} (Normal Range: {normal_range[0]} - {normal_range[1]})')
+                    st.markdown(f'Result: {value} {unit} (Normal Range: {normal_range[0]} - {normal_range[1]} {unit})')
                     st.markdown(f"Status: {status}")
                     st.markdown(f"Finding: {findings[result].get(status, 'No finding available')}")
                     st.markdown(f'<progress value="{value}" max="{normal_range[1]}" style="width: 100%; background-color: {color};"></progress>', unsafe_allow_html=True)
+
 
         with st.expander("Weight Status", expanded=True):
             st.markdown('---')
@@ -270,9 +270,8 @@ def main():
         data = fetch_patient_data(name)
         if data:
             st.write('## Patient Data')
-            headers = ["ID", "Name", "Age", "Sex", "Weight",
-                       "Height", "Waist-to-Hip Ratio", "Body Fat Percentage"]
-            data_df = pd.DataFrame(data, columns=headers)
+            headers = ["ID", "Name", "Age", "Sex", "Weight", "Height", "Waist-to-Hip Ratio", "Body Fat Percentage"]
+            data_df = pd.DataFrame(data)  # Use only the necessary number of headers
             st.dataframe(data_df)
         else:
             st.warning('No data found for this patient.')
