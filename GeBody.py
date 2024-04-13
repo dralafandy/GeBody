@@ -1,8 +1,6 @@
 import streamlit as st
 import pandas as pd
 import sqlite3
-import plotly.graph_objs as go
-from plotly.subplots import make_subplots
 
 
 # Create a connection to the SQLite database
@@ -135,19 +133,8 @@ def plot_progressions(data):
     body_fat_percentage_data = [entry[7] for entry in data]  # Extracting body fat percentage from data
     muscle_mass_data = [calculate_muscle_mass(entry[4], entry[7]) for entry in data]  # Calculating muscle mass from weight and body fat percentage
 
-    # Creating Plotly subplot with two columns
-    fig = make_subplots(rows=1, cols=3, subplot_titles=("Weight", "Body Fat Percentage", "Muscle Mass"))
-
-    # Adding traces for weight, body fat percentage, and muscle mass
-    fig.add_trace(go.Scatter(x=list(range(len(weight_data))), y=weight_data, mode='lines+markers', name='Weight', line=dict(color='blue')), row=1, col=1)
-    fig.add_trace(go.Scatter(x=list(range(len(body_fat_percentage_data))), y=body_fat_percentage_data, mode='lines+markers', name='Body Fat Percentage', line=dict(color='green')), row=1, col=2)
-    fig.add_trace(go.Scatter(x=list(range(len(muscle_mass_data))), y=muscle_mass_data, mode='lines+markers', name='Muscle Mass', line=dict(color='red')), row=1, col=3)
-
-    # Updating layout
-    fig.update_layout(title='Progressions Over Time')
-
-    # Show plot
-    fig.show()
+    # Plotting
+    st.line_chart({"Weight": weight_data, "Body Fat Percentage": body_fat_percentage_data, "Muscle Mass": muscle_mass_data})
 
 
 # Calculate BMI
